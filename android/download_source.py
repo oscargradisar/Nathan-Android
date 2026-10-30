@@ -1,9 +1,9 @@
 """Download the exact public sdist used by the native Android wheel job."""
 import json
 import os
-from pathlib import Path
 import tarfile
 import urllib.request
+from pathlib import Path
 
 name, version = os.environ["PACKAGE"].split("==")
 with urllib.request.urlopen(f"https://pypi.org/pypi/{name}/{version}/json") as response:

@@ -22,3 +22,12 @@ data/
 build/
 dist/
 *.spec
+
+# Android generated sources, builds and signing material
+android/.gradle/
+android/**/build/
+android/app/src/main/python/
+android/wheels/
+android/local.properties
+*.keystore
+*.p12
