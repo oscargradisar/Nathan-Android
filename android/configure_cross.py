@@ -8,7 +8,7 @@ target = os.environ["CARGO_BUILD_TARGET"]
 subprocess.run(["rustup", "target", "add", target], check=True)
 libdir = Path(sysconfig.get_config_var("LIBDIR"))
 if not (libdir / "libpython3.13.so").exists():
-    candidates = list((Path.home() / ".cache/cibuildwheel").rglob("libpython3.13.so"))
+    candidates = list(Path("/tmp").rglob("libpython3.13.so"))
     if not candidates:
         raise RuntimeError(f"Target libpython missing: {libdir}")
     libdir = next((p.parent for p in candidates if ("aarch64" in str(p)) == target.startswith("aarch64")), candidates[0].parent)

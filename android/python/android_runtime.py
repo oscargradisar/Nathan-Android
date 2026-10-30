@@ -10,7 +10,7 @@ _url = None
 
 def start(home: str) -> str:
     global _server, _url
-    if _server is not None and _server.started:
+    if _server is not None and _server.started and not _server.should_exit:
         return _url
     from java import jclass
     vault = jclass("com.nathan.android.KeyVault")

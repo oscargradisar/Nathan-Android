@@ -13,7 +13,6 @@ import android.webkit.ValueCallback;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import com.chaquo.python.Python;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
     static MainActivity current;
@@ -27,7 +26,7 @@ public class MainActivity extends Activity {
         TextView loading = new TextView(this); loading.setText("Starting Nathan on this phone…");
         loading.setTextColor(0xff3fd3ff); loading.setPadding(24, 80, 24, 24);
         root.setBackgroundColor(0xff030810); root.addView(loading);
-        Executors.newSingleThreadExecutor().execute(() -> {
+        new Thread(() -> {
             try {
                 KeyVault.init(getApplicationContext());
                 serverUrl = Python.getInstance().getModule("android_runtime")
@@ -65,7 +64,7 @@ public class MainActivity extends Activity {
                 android.util.Log.e("Nathan", "Startup failed", error);
                 runOnUiThread(() -> loading.setText("Nathan could not start:\n" + startupError));
             }
-        });
+        }, "Nathan startup").start();
     }
     public static boolean openExternal(String value) {
         Uri uri = Uri.parse(value);
