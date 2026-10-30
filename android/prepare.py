@@ -14,6 +14,11 @@ shutil.copyfile(ROOT / "providers.yaml", DEST / "nathan/providers.yaml")
 config = DEST / "nathan/config.py"
 config.write_text(config.read_text().replace('DEFAULT_CONFIG = ROOT / "providers.yaml"',
                   'DEFAULT_CONFIG = Path(__file__).parent / "providers.yaml"'))
+page = DEST / "nathan/web/static/index.html"
+page.write_text(page.read_text(encoding="utf-8").replace(
+    "press its Copy button, and Nathan picks it up. Keys stay in this computer's keychain.",
+    "copy it, return to Nathan and press Paste key. Keys stay encrypted on this phone.").replace(
+    '<h2 class="sub-h">Your premium plans · management</h2>', ""), encoding="utf-8")
 for path in (ROOT / "android/python").rglob("*.py"):
     target = DEST / path.relative_to(ROOT / "android/python")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -30,7 +35,7 @@ def make_tool(workspace=None):
 css = DEST / "nathan/web/static/style.css"
 with css.open("a", encoding="utf-8") as stream:
     stream.write('''
-#lead, .plans-help, .rail a[data-view="evolve"] { display: none; }
+#lead, #managers, .plans-help, .rail a[data-view="evolve"] { display: none; }
 @media (max-width: 700px) {
   body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main"; }
   .rail { position: fixed; inset: auto 0 0; width: 100%; height: 58px; display: flex;
