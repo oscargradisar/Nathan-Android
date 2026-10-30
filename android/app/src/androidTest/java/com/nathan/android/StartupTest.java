@@ -21,6 +21,8 @@ public class StartupTest {
         String base = app.serverUrl.split("/#")[0];
         HttpURLConnection status = (HttpURLConnection) new URL(base + "/api/status").openConnection();
         assertEquals(200, status.getResponseCode()); status.disconnect();
+        assertEquals("Android worker OK", com.chaquo.python.Python.getInstance()
+            .getModule("android_runtime").callAttr("self_check").toString());
         KeyVault.put("instrumentation-test", "not-a-provider-key");
         assertEquals("not-a-provider-key", KeyVault.get("instrumentation-test"));
         KeyVault.remove("instrumentation-test");

@@ -28,7 +28,7 @@ jobs:
         id: cache
         with:
           path: wheelhouse
-          key: android-cp313-v3-${{ matrix.package }}-${{ matrix.target.android }}
+          key: android-cp313-v4-${{ matrix.package }}-${{ matrix.target.android }}
       - name: Build Android Python wheels
         if: steps.cache.outputs.cache-hit != 'true'
         env:
@@ -78,6 +78,7 @@ jobs:
         run: |
           printf '%s' "$KEYSTORE_B64" | base64 --decode > android/release.p12
           gradle -p android assembleDebug assembleRelease --stacktrace
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose android/app/build/outputs/apk/release/app-release.apk
       - name: Allow emulator acceleration
         run: sudo chmod 666 /dev/kvm
       - name: On-device startup and key-storage smoke test

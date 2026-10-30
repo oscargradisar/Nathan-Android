@@ -1,5 +1,20 @@
 # Nathan
 
+**Standalone Android variant:** this repository derives from
+[oscargradisar/Nathan](https://github.com/oscargradisar/Nathan) at upstream commit
+`18313c0` (Nathan 1.6.0). Android-specific changes live under `android/`; the desktop
+engine and interface remain the source for the APK.
+
+Download the signed **Nathan-Android.apk** from this repository's
+[Android preview releases](https://github.com/oscargradisar/Nathan-Android/releases).
+It runs its Python engine on the phone and does not require a PC/server or Termux.
+Android 8+ on ARM64, or an x86-64 emulator. Internet is needed for AI and live data.
+Use Accounts to add your own API keys; they are encrypted with Android Keystore.
+Desktop CLI managers, installed-game/app control, subprocess execution, and OS
+scheduled tasks are not mobile features. See [Android release notes](android/RELEASE_NOTES.md).
+
+The original desktop documentation follows.
+
 **6 answers.. 1 answer.** Nathan runs a small company of free AI models, with Claude as its Overlord. You ask once; a manager splits the job, a team of models works on the parts at the same time, a writer joins it up and a reviewer tells you what you asked for versus what you got. Operating cost: $0.
 
 ## Get it

@@ -58,3 +58,32 @@ def start(home: str) -> str:
 def stop():
     if _server:
         _server.should_exit = True
+
+
+def self_check():
+    """Check the Android-pinned SDK path without contacting any provider."""
+    import asyncio
+
+    import httpx
+
+    from nathan.client import Client
+    from nathan.config import Provider
+
+    async def run():
+        def respond(request):
+            return httpx.Response(200, json={"id": "test", "object": "chat.completion",
+                "created": 0, "model": "test", "choices": [{"index": 0,
+                "message": {"role": "assistant", "content": "Android worker OK"},
+                "finish_reason": "stop"}]})
+
+        provider = Provider(name="test", base_url="https://example.test/v1", models={"test": {}})
+        client = Client({"test": provider}, http_client=httpx.AsyncClient(
+            transport=httpx.MockTransport(respond)))
+        try:
+            result = await client.chat("test/test", [{"role": "user", "content": "test"}])
+            assert result.text == "Android worker OK"
+            return result.text
+        finally:
+            await client.close()
+
+    return asyncio.run(run())
