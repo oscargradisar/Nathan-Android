@@ -30,6 +30,7 @@ def make_tool(workspace=None):
 css = DEST / "nathan/web/static/style.css"
 with css.open("a", encoding="utf-8") as stream:
     stream.write('''
+#lead, .plans-help, .rail a[data-view="evolve"] { display: none; }
 @media (max-width: 700px) {
   .rail { position: fixed; inset: auto 0 0; width: 100%; height: 58px; display: flex;
     overflow-x: auto; z-index: 20; background: #030810; }

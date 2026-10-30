@@ -1,5 +1,7 @@
 """Run Nathan's engine and loopback API on the phone, with native key storage."""
 import os
+import threading
+import time
 import webbrowser
 
 _server = None
@@ -42,6 +44,14 @@ def start(home: str) -> str:
     engine = Engine()
     _server, _url = start_server(engine, self_check=False)
     _server.config.app.state.open_browser = webbrowser.open
+    def watch_exit():
+        while not _server.should_exit:
+            if _server.config.app.state.quit:
+                platform.finishApp()
+                return
+            time.sleep(0.5)
+
+    threading.Thread(target=watch_exit, daemon=True).start()
     return _url + "/#console"
 
 

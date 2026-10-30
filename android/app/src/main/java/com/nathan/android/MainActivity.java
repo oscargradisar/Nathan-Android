@@ -9,6 +9,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import com.chaquo.python.Python;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity {
     WebView view;
     public volatile String serverUrl;
     public volatile String startupError;
+    private ValueCallback<Uri[]> fileChoice;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state); current = this;
         FrameLayout root = new FrameLayout(this); setContentView(root);
@@ -35,8 +37,18 @@ public class MainActivity extends Activity {
                     view.getSettings().setJavaScriptEnabled(true);
                     view.getSettings().setDomStorageEnabled(true);
                     view.getSettings().setAllowFileAccess(false);
-                    view.getSettings().setAllowContentAccess(false);
-                    view.setWebChromeClient(new WebChromeClient());
+                    view.getSettings().setAllowContentAccess(true);
+                    view.setWebChromeClient(new WebChromeClient() {
+                        @Override public boolean onShowFileChooser(WebView web, ValueCallback<Uri[]> callback,
+                            FileChooserParams params) {
+                            if (fileChoice != null) fileChoice.onReceiveValue(null);
+                            fileChoice = callback;
+                            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                            intent.setType("image/*"); intent.addCategory(Intent.CATEGORY_OPENABLE);
+                            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                            startActivityForResult(intent, 40); return true;
+                        }
+                    });
                     view.setWebViewClient(new WebViewClient() {
                         @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
                             if (!request.isForMainFrame()) return false;
@@ -61,6 +73,19 @@ public class MainActivity extends Activity {
         current.runOnUiThread(() -> current.startActivity(new Intent(Intent.ACTION_VIEW, uri)));
         return true;
     }
+    public static void finishApp() { current.runOnUiThread(() -> current.finish()); }
+    @Override protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request != 40 || fileChoice == null) return;
+        Uri[] files = null;
+        if (result == RESULT_OK && data != null) {
+            if (data.getClipData() != null) {
+                int count = Math.min(4, data.getClipData().getItemCount()); files = new Uri[count];
+                for (int i = 0; i < count; i++) files[i] = data.getClipData().getItemAt(i).getUri();
+            } else if (data.getData() != null) files = new Uri[]{data.getData()};
+        }
+        fileChoice.onReceiveValue(files); fileChoice = null;
+    }
     @Override public void onBackPressed() {
         if (view != null && view.canGoBack()) view.goBack();
         else new AlertDialog.Builder(this).setMessage("Close Nathan?")
@@ -68,6 +93,7 @@ public class MainActivity extends Activity {
     }
     @Override public void onDestroy() {
         CameraLookup.cancel();
+        if (fileChoice != null) fileChoice.onReceiveValue(null);
         if (view != null) view.destroy();
         if (isFinishing()) Python.getInstance().getModule("android_runtime").callAttr("stop");
         super.onDestroy();
