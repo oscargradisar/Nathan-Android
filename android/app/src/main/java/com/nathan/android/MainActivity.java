@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileChoice;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state); current = this;
-        FrameLayout root = new FrameLayout(this); setContentView(root);
+        FrameLayout root = new FrameLayout(this); root.setFitsSystemWindows(true); setContentView(root);
         TextView loading = new TextView(this); loading.setText("Starting Nathan on this phone…");
         loading.setTextColor(0xff3fd3ff); loading.setPadding(24, 80, 24, 24);
         root.setBackgroundColor(0xff030810); root.addView(loading);

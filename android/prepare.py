@@ -32,8 +32,9 @@ with css.open("a", encoding="utf-8") as stream:
     stream.write('''
 #lead, .plans-help, .rail a[data-view="evolve"] { display: none; }
 @media (max-width: 700px) {
+  body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main"; }
   .rail { position: fixed; inset: auto 0 0; width: 100%; height: 58px; display: flex;
-    overflow-x: auto; z-index: 20; background: #030810; }
+    flex-direction: row; padding: 4px; overflow-x: auto; z-index: 20; background: #030810; }
   .rail a { flex: 0 0 62px; }
   main { margin-left: 0; padding-bottom: 70px; }
   .world-view { height: calc(100dvh - 115px); }
