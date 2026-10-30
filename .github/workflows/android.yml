@@ -73,7 +73,9 @@ jobs:
           path: android/wheels
           merge-multiple: true
       - name: Prepare Android sources
-        run: python android/prepare.py
+        run: |
+          python android/normalize_wheels.py
+          python android/prepare.py
       - name: Build APK
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
