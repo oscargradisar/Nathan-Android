@@ -6,6 +6,9 @@ on:
     paths: ['android/**', '.github/workflows/android.yml']
 permissions:
   contents: write
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   wheels:
     runs-on: ubuntu-latest
@@ -89,7 +92,11 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: gradle -p android connectedDebugAndroidTest --stacktrace
+          script: |
+            gradle -p android connectedDebugAndroidTest --stacktrace
+            adb shell am start -n com.nathan.android/.MainActivity
+            sleep 10
+            adb exec-out screencap -p > android-screen.png
       - name: Collect emulator diagnostics
         if: failure()
         run: timeout 15s adb logcat -d > android-logcat.txt || true
@@ -103,7 +110,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Nathan-Android-APK
-          path: android/app/build/outputs/apk/release/*.apk
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android-screen.png
       - name: Publish installable APK
         env:
           GH_TOKEN: ${{ github.token }}
