@@ -10,8 +10,12 @@ jobs:
   wheels:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package: ['pydantic_core==2.33.2', 'jiter==0.10.0']
+        target:
+          - {android: arm64_v8a, rust: aarch64-linux-android, linker: CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER}
+          - {android: x86_64, rust: x86_64-linux-android, linker: CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -24,14 +28,16 @@ jobs:
         id: cache
         with:
           path: wheelhouse
-          key: android-cp313-v1-${{ matrix.package }}
+          key: android-cp313-v2-${{ matrix.package }}-${{ matrix.target.android }}
       - name: Build Android Python wheels
         if: steps.cache.outputs.cache-hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
-          CIBW_BUILD: 'cp313-android_*'
-          CIBW_ARCHS_ANDROID: 'arm64_v8a x86_64'
+          CIBW_BUILD: 'cp313-android_${{ matrix.target.android }}'
+          CIBW_ARCHS_ANDROID: '${{ matrix.target.android }}'
           CIBW_TEST_SKIP: '*'
+          CIBW_BEFORE_BUILD: 'rustup target add ${{ matrix.target.rust }}'
+          CIBW_ENVIRONMENT: 'CARGO_BUILD_TARGET=${{ matrix.target.rust }} ${{ matrix.target.linker }}="$CC"'
         run: |
           pip install cibuildwheel==3.3.1
           python android/download_source.py
