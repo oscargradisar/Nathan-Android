@@ -47,7 +47,7 @@ chaquopy {
             install 'platformdirs==4.3.8'
             install 'rich==14.0.0'
             install 'typer==0.16.0'
-            install 'pyperclip==1.9.0'
+            install 'pyperclip==1.11.0'
         }
     }
 }
