@@ -9,6 +9,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceError;
+import android.webkit.ConsoleMessage;
 import android.webkit.ValueCallback;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -38,6 +40,9 @@ public class MainActivity extends Activity {
                     view.getSettings().setAllowFileAccess(false);
                     view.getSettings().setAllowContentAccess(true);
                     view.setWebChromeClient(new WebChromeClient() {
+                        @Override public boolean onConsoleMessage(ConsoleMessage message) {
+                            android.util.Log.i("NathanWebView", message.message()); return true;
+                        }
                         @Override public boolean onShowFileChooser(WebView web, ValueCallback<Uri[]> callback,
                             FileChooserParams params) {
                             if (fileChoice != null) fileChoice.onReceiveValue(null);
@@ -49,6 +54,9 @@ public class MainActivity extends Activity {
                         }
                     });
                     view.setWebViewClient(new WebViewClient() {
+                        @Override public void onReceivedError(WebView web, WebResourceRequest request, WebResourceError error) {
+                            android.util.Log.e("NathanWebView", request.getUrl() + ": " + error.getDescription());
+                        }
                         @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
                             if (!request.isForMainFrame()) return false;
                             Uri url = request.getUrl();

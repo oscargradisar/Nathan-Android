@@ -8,6 +8,9 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RunWith(AndroidJUnit4.class)
 public class StartupTest {
@@ -31,5 +34,20 @@ public class StartupTest {
         blocked.setRequestMethod("POST"); blocked.setDoOutput(true);
         blocked.getOutputStream().write("{}".getBytes());
         assertEquals(403, blocked.getResponseCode()); blocked.disconnect();
+        AtomicReference<String> page = new AtomicReference<>("");
+        long uiDeadline = System.currentTimeMillis() + 45000;
+        while (System.currentTimeMillis() < uiDeadline) {
+            CountDownLatch read = new CountDownLatch(1);
+            app.runOnUiThread(() -> {
+                if (app.view == null) { read.countDown(); return; }
+                app.view.evaluateJavascript("JSON.stringify({url:location.href,text:document.body.innerText.slice(0,1000),width:innerWidth,height:innerHeight})",
+                    value -> { page.set(value); read.countDown(); });
+            });
+            read.await(2, TimeUnit.SECONDS);
+            if (page.get().contains("NATHAN") || page.get().contains("Nathan")) break;
+            Thread.sleep(500);
+        }
+        android.util.Log.i("NathanTest", "Rendered WebView: " + page.get());
+        assertTrue("UI did not load: " + page.get(), page.get().contains("NATHAN") || page.get().contains("Nathan"));
     }
 }
