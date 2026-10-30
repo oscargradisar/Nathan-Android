@@ -28,7 +28,7 @@ jobs:
         id: cache
         with:
           path: wheelhouse
-          key: android-cp313-v2-${{ matrix.package }}-${{ matrix.target.android }}
+          key: android-cp313-v3-${{ matrix.package }}-${{ matrix.target.android }}
       - name: Build Android Python wheels
         if: steps.cache.outputs.cache-hit != 'true'
         env:
@@ -36,8 +36,8 @@ jobs:
           CIBW_BUILD: 'cp313-android_${{ matrix.target.android }}'
           CIBW_ARCHS_ANDROID: '${{ matrix.target.android }}'
           CIBW_TEST_SKIP: '*'
-          CIBW_BEFORE_BUILD: 'rustup target add ${{ matrix.target.rust }}'
-          CIBW_ENVIRONMENT: 'CARGO_BUILD_TARGET=${{ matrix.target.rust }} ${{ matrix.target.linker }}="$CC"'
+          CIBW_BEFORE_BUILD: 'cd {project} && python ../android/configure_cross.py'
+          CIBW_ENVIRONMENT: 'CARGO_BUILD_TARGET=${{ matrix.target.rust }} PYO3_CONFIG_FILE=/tmp/nathan-pyo3.txt'
         run: |
           pip install cibuildwheel==3.3.1
           python android/download_source.py
@@ -72,8 +72,43 @@ jobs:
       - name: Prepare Android sources
         run: python android/prepare.py
       - name: Build APK
-        run: gradle -p android assembleDebug --stacktrace
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > android/release.p12
+          gradle -p android assembleDebug assembleRelease --stacktrace
+      - name: Allow emulator acceleration
+        run: sudo chmod 666 /dev/kvm
+      - name: On-device startup and key-storage smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: gradle -p android connectedDebugAndroidTest --stacktrace
+      - name: Collect emulator diagnostics
+        if: failure()
+        run: adb logcat -d > android-logcat.txt || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: android-diagnostics
+          path: |
+            android-logcat.txt
+            android/app/build/reports/
       - uses: actions/upload-artifact@v4
         with:
           name: Nathan-Android-APK
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
+      - name: Publish installable APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Nathan-Android.apk
+          sha256sum Nathan-Android.apk > SHA256SUMS.txt
+          gh release create "android-preview-${GITHUB_RUN_NUMBER}" Nathan-Android.apk SHA256SUMS.txt \
+            --title "Nathan 1.6.0 Android preview ${GITHUB_RUN_NUMBER}" --prerelease \
+            --notes-file android/RELEASE_NOTES.md
