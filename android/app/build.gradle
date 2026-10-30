@@ -18,9 +18,9 @@ android {
         release {
             storeFile rootProject.file('release.p12')
             storeType 'PKCS12'
-            storePassword (System.getenv('ANDROID_STORE_PASSWORD') ?: '').trim()
+            storePassword = (System.getenv('ANDROID_STORE_PASSWORD') ?: '').trim()
             keyAlias 'nathan'
-            keyPassword (System.getenv('ANDROID_STORE_PASSWORD') ?: '').trim()
+            keyPassword = (System.getenv('ANDROID_STORE_PASSWORD') ?: '').trim()
         }
     }
     buildTypes { release { signingConfig signingConfigs.release } }
